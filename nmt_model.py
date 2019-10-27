@@ -131,7 +131,7 @@ class NMT(nn.Module):
         """
         enc_hiddens, dec_init_state = None, None
 
-        x = torch.Tensor(self.model_embeddings.source(source_padded))
+        x = torch.cuda.DoubleTensorself.model_embeddings.source(source_padded))
         x = utils.rnn.pack_padded_sequence(x, source_lengths)
         enc_hiddens, (last_hidden, last_cell) = self.encoder(x)
 
@@ -207,7 +207,7 @@ class NMT(nn.Module):
         combined_outputs = []
 
         enc_hiddens_proj = self.att_projection(enc_hiddens)
-        y = torch.Tensor(self.model_embeddings.target(target_padded))
+        y = torch.cuda.DoubleTensorself.model_embeddings.target(target_padded))
         ys = torch.split(y, 1, 0)
 
         for w in ys:
@@ -413,7 +413,7 @@ class NMT(nn.Module):
                                                                            src_encodings_att_linear.size(1),
                                                                            src_encodings_att_linear.size(2))
 
-            y_tm1 = torch.tensor([self.vocab.tgt[hyp[-1]] for hyp in hypotheses], dtype=torch.long, device=self.device)
+            y_tm1 = torch.cuda.DoubleTensor[self.vocab.tgt[hyp[-1]] for hyp in hypotheses], dtype=torch.long, device=self.device)
             y_t_embed = self.model_embeddings.target(y_tm1)
 
             x = torch.cat([y_t_embed, att_tm1], dim=-1)
@@ -453,12 +453,12 @@ class NMT(nn.Module):
             if len(completed_hypotheses) == beam_size:
                 break
 
-            live_hyp_ids = torch.tensor(live_hyp_ids, dtype=torch.long, device=self.device)
+            live_hyp_ids = torch.cuda.DoubleTensorlive_hyp_ids, dtype=torch.long, device=self.device)
             h_tm1 = (h_t[live_hyp_ids], cell_t[live_hyp_ids])
             att_tm1 = att_t[live_hyp_ids]
 
             hypotheses = new_hypotheses
-            hyp_scores = torch.tensor(new_hyp_scores, dtype=torch.float, device=self.device)
+            hyp_scores = torch.cuda.DoubleTensornew_hyp_scores, dtype=torch.float, device=self.device)
 
         if len(completed_hypotheses) == 0:
             completed_hypotheses.append(Hypothesis(value=hypotheses[0][1:],
