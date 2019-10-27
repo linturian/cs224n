@@ -131,7 +131,7 @@ class NMT(nn.Module):
         """
         enc_hiddens, dec_init_state = None, None
 
-        x = torch.cuda.DoubleTensorself.model_embeddings.source(source_padded))
+        x = torch.Tensor(self.model_embeddings.source(source_padded), dtype=torch.float)
         x = utils.rnn.pack_padded_sequence(x, source_lengths)
         enc_hiddens, (last_hidden, last_cell) = self.encoder(x)
 
@@ -188,7 +188,7 @@ class NMT(nn.Module):
                                      b = batch size, src_len = maximum source sentence length.
         @param dec_init_state (tuple(Tensor, Tensor)): Initial state and cell for decoder
         @param target_padded (Tensor): Gold-standard padded target sentences (tgt_len, b), where
-                                       tgt_len = maximum target sentence length, b = batch size. 
+                                       tgt_len = maximum target sentence length, b = batch size.
 
         @returns combined_outputs (Tensor): combined output tensor  (tgt_len, b,  h), where
                                         tgt_len = maximum target sentence length, b = batch_size,  h = hidden size
@@ -207,7 +207,7 @@ class NMT(nn.Module):
         combined_outputs = []
 
         enc_hiddens_proj = self.att_projection(enc_hiddens)
-        y = torch.cuda.DoubleTensorself.model_embeddings.target(target_padded))
+        y = torch.Tensor(self.model_embeddings.target(target_padded), dtype=torch.float)
         ys = torch.split(y, 1, 0)
 
         for w in ys:
@@ -219,7 +219,6 @@ class NMT(nn.Module):
 
         combined_outputs = torch.stack(combined_outputs)
 
-
         ### YOUR CODE HERE (~9 Lines)
         ### TODO:
         ###     1. Apply the attention projection layer to `enc_hiddens` to obtain `enc_hiddens_proj`,
@@ -230,7 +229,7 @@ class NMT(nn.Module):
         ###         where tgt_len = maximum target sentence length, b = batch size, e = embedding size.
         ###     3. Use the torch.split function to iterate over the time dimension of Y.
         ###         Within the loop, this will give you Y_t of shape (1, b, e) where b = batch size, e = embedding size.
-        ###             - Squeeze Y_t into a tensor of dimension (b, e). 
+        ###             - Squeeze Y_t into a tensor of dimension (b, e).
         ###             - Construct Ybar_t by concatenating Y_t with o_prev.
         ###             - Use the step function to compute the the Decoder's next (cell, state) values
         ###               as well as the new combined output o_t.
@@ -243,7 +242,7 @@ class NMT(nn.Module):
         ### Note:
         ###    - When using the squeeze() function make sure to specify the dimension you want to squeeze
         ###      over. Otherwise, you will remove the batch dimension accidentally, if batch_size = 1.
-        ###   
+        ###
         ### Use the following docs to implement this functionality:
         ###     Zeros Tensor:
         ###         https://pytorch.org/docs/stable/torch.html#torch.zeros
@@ -276,7 +275,7 @@ class NMT(nn.Module):
         @param enc_hiddens_proj (Tensor): Encoder hidden states Tensor, projected from (h * 2) to h. Tensor is with shape (b, src_len, h),
                                     where b = batch size, src_len = maximum source length, h = hidden size.
         @param enc_masks (Tensor): Tensor of sentence masks shape (b, src_len),
-                                    where b = batch size, src_len is maximum source length. 
+                                    where b = batch size, src_len is maximum source length.
 
         @returns dec_state (tuple (Tensor, Tensor)): Tuple of tensors both shape (b, h), where b = batch size, h = hidden size.
                 First tensor is decoder's new hidden state, second tensor is decoder's new cell.
@@ -297,7 +296,7 @@ class NMT(nn.Module):
         ### TODO:
         ###     1. Apply the decoder to `Ybar_t` and `dec_state`to obtain the new dec_state.
         ###     2. Split dec_state into its two parts (dec_hidden, dec_cell)
-        ###     3. Compute the attention scores e_t, a Tensor shape (b, src_len). 
+        ###     3. Compute the attention scores e_t, a Tensor shape (b, src_len).
         ###        Note: b = batch_size, src_len = maximum source length, h = hidden size.
         ###
         ###       Hints:
@@ -365,9 +364,9 @@ class NMT(nn.Module):
         """ Generate sentence masks for encoder hidden states.
 
         @param enc_hiddens (Tensor): encodings of shape (b, src_len, 2*h), where b = batch size,
-                                     src_len = max source length, h = hidden size. 
+                                     src_len = max source length, h = hidden size.
         @param source_lengths (List[int]): List of actual lengths for each of the sentences in the batch.
-        
+
         @returns enc_masks (Tensor): Tensor of sentence masks of shape (b, src_len),
                                     where src_len = max source length, h = hidden size.
         """
@@ -413,7 +412,7 @@ class NMT(nn.Module):
                                                                            src_encodings_att_linear.size(1),
                                                                            src_encodings_att_linear.size(2))
 
-            y_tm1 = torch.cuda.DoubleTensor[self.vocab.tgt[hyp[-1]] for hyp in hypotheses], dtype=torch.long, device=self.device)
+            y_tm1 = torch.tensor([self.vocab.tgt[hyp[-1]] for hyp in hypotheses], dtype=torch.long, device=self.device)
             y_t_embed = self.model_embeddings.target(y_tm1)
 
             x = torch.cat([y_t_embed, att_tm1], dim=-1)
@@ -453,12 +452,12 @@ class NMT(nn.Module):
             if len(completed_hypotheses) == beam_size:
                 break
 
-            live_hyp_ids = torch.cuda.DoubleTensorlive_hyp_ids, dtype=torch.long, device=self.device)
+            live_hyp_ids = torch.tensor(live_hyp_ids, dtype=torch.long, device=self.device)
             h_tm1 = (h_t[live_hyp_ids], cell_t[live_hyp_ids])
             att_tm1 = att_t[live_hyp_ids]
 
             hypotheses = new_hypotheses
-            hyp_scores = torch.cuda.DoubleTensornew_hyp_scores, dtype=torch.float, device=self.device)
+            hyp_scores = torch.tensor(new_hyp_scores, dtype=torch.float, device=self.device)
 
         if len(completed_hypotheses) == 0:
             completed_hypotheses.append(Hypothesis(value=hypotheses[0][1:],

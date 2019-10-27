@@ -123,7 +123,7 @@ class VocabEntry(object):
         """
         word_ids = self.words2indices(sents)
         sents_t = pad_sents(word_ids, self['<pad>'])
-        sents_var = torch.cuda.DoubleTensorsents_t, dtype=torch.long, device=device)
+        sents_var = torch.tensor(sents_t, dtype=torch.long, device=device)
         return torch.t(sents_var)
 
     @staticmethod
