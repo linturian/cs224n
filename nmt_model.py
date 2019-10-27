@@ -131,7 +131,7 @@ class NMT(nn.Module):
         """
         enc_hiddens, dec_init_state = None, None
 
-        x = torch.Tensor(self.model_embeddings.source(source_padded), dtype=torch.float)
+        x = torch.tensor(self.model_embeddings.source(source_padded), dtype=torch.float, device=self.device)
         x = utils.rnn.pack_padded_sequence(x, source_lengths)
         enc_hiddens, (last_hidden, last_cell) = self.encoder(x)
 
@@ -207,7 +207,7 @@ class NMT(nn.Module):
         combined_outputs = []
 
         enc_hiddens_proj = self.att_projection(enc_hiddens)
-        y = torch.Tensor(self.model_embeddings.target(target_padded), dtype=torch.float)
+        y = torch.tensor(self.model_embeddings.target(target_padded), dtype=torch.float, device=self.device)
         ys = torch.split(y, 1, 0)
 
         for w in ys:
